@@ -1,6 +1,7 @@
 package com.brandeis.cosi132a.finalproject.service;
 
 import com.brandeis.cosi132a.finalproject.model.CovidMeta;
+import com.brandeis.cosi132a.finalproject.model.Sentence;
 import com.brandeis.cosi132a.finalproject.repository.CovidMetaRepository;
 import com.brandeis.cosi132a.finalproject.utils.Constants;
 import com.brandeis.cosi132a.finalproject.utils.VectorEncoder;
@@ -14,15 +15,12 @@ import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.ElasticsearchClient;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.common.xcontent.XContentParser;
+import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.query.Field;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.stereotype.Service;
@@ -81,11 +79,20 @@ public class CovidMetadataServiceImpl implements CovidMetadataService {
         return covidMetaRepository.findByPublishTimeGreaterThanEqual(publishTime, PageRequest.of(page, Constants.RESULTS_PER_PAGE));
     }
 
+//    public Page<CovidMeta> query(String author, String title, String dateFrom, String dateTo) {
+//
+//    }
+
     @Override
     public Page<CovidMeta> findByText(String text, int page) {
         SearchQuery query = new NativeSearchQueryBuilder()
-                .withQuery(multiMatchQuery(text))
-                .withFields("title", "authors", "textAbstract", "bodyText")
+                .withQuery(multiMatchQuery(text)
+                        .field("title")
+                        .field("authors")
+                        .field("textAbstract")
+                        .field("bodyText")
+                        .type(MultiMatchQueryBuilder.Type.CROSS_FIELDS)
+                )
                 .withHighlightFields(
                         new HighlightBuilder.Field("title"),
                         new HighlightBuilder.Field("authors"),
@@ -98,15 +105,15 @@ public class CovidMetadataServiceImpl implements CovidMetadataService {
     }
 
     @Override
-    public List<CovidMeta> findByDenseVector(String base64vector) {
+    public List<Sentence> findSentence(String base64vector) {
         String decoded_url = VectorEncoder.urlBase64Decode(base64vector);
-        float[] vector = VectorEncoder.convertBase64ToArray(decoded_url);
+        double[] vector = VectorEncoder.convertBase64ToArray(decoded_url);
         String body = "{\n" +
                 "\t\"query\": {\n" +
                 "  \"script_score\": {\n" +
                 "    \"query\": {\"match_all\": {}},\n" +
                 "    \"script\": {\n" +
-                "      \"source\": \"cosineSimilarity(params.query_vector, 'doc_vector') + 1.0\",\n" +
+                "      \"source\": \"cosineSimilarity(params.query_vector, 'vector') + 1.0\",\n" +
                 "      \"params\": {\"query_vector\":" + Arrays.toString(vector) +
                 "\t\t}\n" +
                 "\t\t}\n" +
@@ -116,7 +123,7 @@ public class CovidMetadataServiceImpl implements CovidMetadataService {
         String resBody = null;
 
         try {
-            Response response = restClient.performRequest("GET", "/covid_embedding_index/_search", Collections.emptyMap(), new NStringEntity(body, ContentType.APPLICATION_JSON));
+            Response response = restClient.performRequest("GET", "/sentence_embedding_index/_search", Collections.emptyMap(), new NStringEntity(body, ContentType.APPLICATION_JSON));
             resBody = EntityUtils.toString(response.getEntity());
         } catch (IOException e) {
             e.printStackTrace();
@@ -125,15 +132,13 @@ public class CovidMetadataServiceImpl implements CovidMetadataService {
                 .create();
         JsonObject jsonObject = gson.fromJson(resBody, JsonObject.class);
         JsonArray hits = jsonObject.get("hits").getAsJsonObject().get("hits").getAsJsonArray();
-        List<CovidMeta> results = new ArrayList<>();
+        List<Sentence> results = new ArrayList<>();
         for (int i = 0; i < hits.size(); i++) {
             JsonObject next = hits.get(i).getAsJsonObject();
-            CovidMeta covidMeta = gson.fromJson(next.get("_source"), CovidMeta.class);
-            String id = next.get("_id").getAsString();
-            covidMeta.setId(id);
+            Sentence sentence = gson.fromJson(next.get("_source"), Sentence.class);
             float score = next.get("_score").getAsFloat();
-            covidMeta.setScore(score);
-            results.add(covidMeta);
+            sentence.setScore(score);
+            results.add(sentence);
         }
         return results;
     }

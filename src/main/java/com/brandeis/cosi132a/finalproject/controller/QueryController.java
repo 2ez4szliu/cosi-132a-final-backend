@@ -1,12 +1,17 @@
 package com.brandeis.cosi132a.finalproject.controller;
 
 import com.brandeis.cosi132a.finalproject.model.CovidMeta;
+import com.brandeis.cosi132a.finalproject.model.Sentence;
 import com.brandeis.cosi132a.finalproject.service.CovidMetadataService;
+import com.brandeis.cosi132a.finalproject.service.Word2VecService;
+import com.brandeis.cosi132a.finalproject.utils.VectorEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -16,18 +21,20 @@ public class QueryController {
     @Autowired
     private CovidMetadataService covidMetadataService;
 
-   @RequestMapping(path = "/hello", method = RequestMethod.GET)
+    @Autowired
+    private Word2VecService word2VecService;
+
+    @RequestMapping(path = "/hello", method = RequestMethod.GET)
     public String hello() {
         return "Hello world";
     }
 
     @RequestMapping(path = "/test", method = RequestMethod.GET)
-    public CovidMeta test() {
-        CovidMeta covidMeta = new CovidMeta();
-        covidMeta.setId("217");
-        covidMeta.setAuthors(Arrays.asList(new String[]{"Bohao Li", "Han Xia", "Shizhao Liu"}));
-        covidMeta.setTitle("COVID-19 IR SYSTEM");
-        return covidMeta;
+    public List<Sentence> test() {
+        String query = "test";
+        double[] vector = word2VecService.sentenceToVector(query);
+        String urlEncode = VectorEncoder.urlBase64Encode(VectorEncoder.convertArrayToBase64(vector));
+        return covidMetadataService.findSentence(urlEncode);
     }
 
     @RequestMapping(path = "/title", method = RequestMethod.GET)
@@ -56,13 +63,15 @@ public class QueryController {
 
     @RequestMapping(path = "/text", method = RequestMethod.GET)
     public Page<CovidMeta> searchByText(@RequestParam(value = "text") String text,
-                                                  @RequestParam(value = "page") int page) {
+                                        @RequestParam(value = "page") int page) {
         return covidMetadataService.findByText(text, page);
     }
 
     @RequestMapping(path = "/vector", method = RequestMethod.GET)
-    public List<CovidMeta> searchByDenseVector(@RequestParam(value = "base64vector") String base64vector) {
-        return covidMetadataService.findByDenseVector(base64vector);
+    public List<Sentence> searchByVector(@RequestParam(value = "query") String query) {
+        double[] vector = word2VecService.sentenceToVector(query);
+        String urlEncode = VectorEncoder.urlBase64Encode(VectorEncoder.convertArrayToBase64(vector));
+        return covidMetadataService.findSentence(urlEncode);
     }
 
 
