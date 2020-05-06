@@ -29,42 +29,15 @@ public class QueryController {
         return "Hello world";
     }
 
-    @RequestMapping(path = "/test", method = RequestMethod.GET)
-    public List<Sentence> test() {
-        String query = "test";
-        double[] vector = word2VecService.sentenceToVector(query);
-        String urlEncode = VectorEncoder.urlBase64Encode(VectorEncoder.convertArrayToBase64(vector));
-        return covidMetadataService.findSentence(urlEncode);
-    }
-
-    @RequestMapping(path = "/title", method = RequestMethod.GET)
-    public Page<CovidMeta> searchByTitle(@RequestParam(value = "title") String title,
-                                         @RequestParam(value = "page") int page) {
-        return covidMetadataService.findByTitle(title, page);
-    }
-
-    @RequestMapping(path = "/author", method = RequestMethod.GET)
-    public Page<CovidMeta> searchByAuthor(@RequestParam(value = "author") String author,
-                                          @RequestParam(value = "page") int page) {
-        return covidMetadataService.findByAuthors(author, page);
-    }
-
-    @RequestMapping(path = "/publishTime", method = RequestMethod.GET)
-    public Page<CovidMeta> searchByPublishTime(@RequestParam(value = "publishTime") String publishTime,
-                                               @RequestParam(value = "page") int page) {
-        return covidMetadataService.findByPublishTime(publishTime, page);
-    }
-
-    @RequestMapping(path = "/publishTimeGTE", method = RequestMethod.GET)
-    public Page<CovidMeta> searchByPublishTimeGTE(@RequestParam(value = "publishTime") String publishTime,
-                                                  @RequestParam(value = "page") int page) {
-        return covidMetadataService.findByPublishTimeGTE(publishTime, page);
-    }
-
-    @RequestMapping(path = "/text", method = RequestMethod.GET)
-    public Page<CovidMeta> searchByText(@RequestParam(value = "text") String text,
-                                        @RequestParam(value = "page") int page) {
-        return covidMetadataService.findByText(text, page);
+    @RequestMapping(path = "/query", method = RequestMethod.GET)
+    public Page<CovidMeta> query(
+            @RequestParam(value = "text", required = false) String text,
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "authors", required = false) List<String> authors,
+            @RequestParam(value = "dateFrom", required = false) String dateFrom,
+            @RequestParam(value = "dateTo", required = false) String dateTo,
+            @RequestParam(value = "page") int page) {
+        return covidMetadataService.query(text, title, authors, dateFrom, dateTo, page);
     }
 
     @RequestMapping(path = "/vector", method = RequestMethod.GET)

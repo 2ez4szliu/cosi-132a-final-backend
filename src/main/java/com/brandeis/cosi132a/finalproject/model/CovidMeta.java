@@ -21,7 +21,6 @@ public class CovidMeta implements Scoreable{
     private List<String> authors;
     private String publishTime;
     private String url;
-    private float[] doc_vector;
     private float score;
     private Map<String, HighlightField> highlightFields;
 
@@ -103,14 +102,6 @@ public class CovidMeta implements Scoreable{
 
     public void setUrl(String url) {
         this.url = url;
-    }
-
-    public float[] getDoc_vector() {
-        return doc_vector;
-    }
-
-    public void setDoc_vector(float[] doc_vector) {
-        this.doc_vector = doc_vector;
     }
 
     @Override
