@@ -1,9 +1,10 @@
 package com.brandeis.cosi132a.finalproject.controller;
 
 import com.brandeis.cosi132a.finalproject.model.CovidMeta;
-import com.brandeis.cosi132a.finalproject.model.Sentence;
+import com.brandeis.cosi132a.finalproject.model.ResultWrapper;
 import com.brandeis.cosi132a.finalproject.service.CovidMetadataService;
 import com.brandeis.cosi132a.finalproject.service.Word2VecService;
+import com.brandeis.cosi132a.finalproject.utils.DateParser;
 import com.brandeis.cosi132a.finalproject.utils.VectorEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.text.ParseException;
 import java.util.List;
 
 @RestController
@@ -34,14 +36,20 @@ public class QueryController {
             @RequestParam(value = "text", required = false) String text,
             @RequestParam(value = "title", required = false) String title,
             @RequestParam(value = "authors", required = false) List<String> authors,
-            @RequestParam(value = "dateFrom", required = false) String dateFrom,
+            @RequestParam(value = "dateSince", required = false) String dateSince,
             @RequestParam(value = "dateTo", required = false) String dateTo,
             @RequestParam(value = "page") int page) {
-        return covidMetadataService.query(text, title, authors, dateFrom, dateTo, page);
+        try {
+            dateSince = DateParser.parseDate(dateSince);
+            dateTo = DateParser.parseDate(dateTo);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return covidMetadataService.query(text, title, authors, dateSince, dateTo, page);
     }
 
     @RequestMapping(path = "/vector", method = RequestMethod.GET)
-    public List<Sentence> searchByVector(@RequestParam(value = "query") String query) {
+    public List<ResultWrapper> searchByVector(@RequestParam(value = "query") String query) {
         double[] vector = word2VecService.sentenceToVector(query);
         String urlEncode = VectorEncoder.urlBase64Encode(VectorEncoder.convertArrayToBase64(vector));
         return covidMetadataService.findSentence(urlEncode);

@@ -1,7 +1,7 @@
 package com.brandeis.cosi132a.finalproject.service;
 
 import com.brandeis.cosi132a.finalproject.model.CovidMeta;
-import com.brandeis.cosi132a.finalproject.model.Sentence;
+import com.brandeis.cosi132a.finalproject.model.ResultWrapper;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -15,6 +15,7 @@ public interface CovidMetadataService {
                           String dateTo,
                           int page);
 
-    List<Sentence> findSentence(String base64vector);
+    List<ResultWrapper> findSentence(String base64vector);
 
+    CovidMeta findByID(String id);
 }

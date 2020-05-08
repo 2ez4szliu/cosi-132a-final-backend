@@ -5,6 +5,7 @@ import java.nio.DoubleBuffer;
 import java.util.Base64;
 
 public class VectorEncoder {
+
     public static double[] convertBase64ToArray(String base64Str) {
         final byte[] decode = Base64.getDecoder().decode(base64Str.getBytes());
         final DoubleBuffer doubleBuffer = ByteBuffer.wrap(decode).asDoubleBuffer();

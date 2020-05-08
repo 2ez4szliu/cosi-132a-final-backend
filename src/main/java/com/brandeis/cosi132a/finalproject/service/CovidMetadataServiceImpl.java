@@ -1,6 +1,7 @@
 package com.brandeis.cosi132a.finalproject.service;
 
 import com.brandeis.cosi132a.finalproject.model.CovidMeta;
+import com.brandeis.cosi132a.finalproject.model.ResultWrapper;
 import com.brandeis.cosi132a.finalproject.model.Sentence;
 import com.brandeis.cosi132a.finalproject.utils.Constants;
 import com.brandeis.cosi132a.finalproject.utils.VectorEncoder;
@@ -37,6 +38,7 @@ public class CovidMetadataServiceImpl implements CovidMetadataService {
 
     private static final int RESULTS_NUM = Constants.RESULTS_PER_PAGE;
     private static final int SLOP = Constants.PHRASE_SLOP;
+    private static final float BOOST = 3;
 
     @Autowired
     private ElasticsearchOperations elasticsearchOperations;
@@ -57,28 +59,26 @@ public class CovidMetadataServiceImpl implements CovidMetadataService {
 
         QueryBuilder textQuery = text == null ?
                 matchAllQuery() : new BoolQueryBuilder()
-                .should(matchQuery("title", text).fuzziness(Fuzziness.AUTO))
+                .should(matchQuery("title", text).fuzziness(Fuzziness.AUTO).boost(BOOST))
                 .should(matchQuery("authors", text).fuzziness(Fuzziness.AUTO))
                 .should(matchQuery("textAbstract", text).fuzziness(Fuzziness.AUTO))
                 .should(matchQuery("bodyText", text).fuzziness(Fuzziness.AUTO))
                 .minimumShouldMatch(1);
-        QueryBuilder titleQuery = title == null ? matchAllQuery() : matchQuery("title", title).fuzziness(Fuzziness.AUTO);
         QueryBuilder authorsQuery = authors == null ? matchAllQuery() : matchQuery("authors", authors).fuzziness(Fuzziness.AUTO).operator(Operator.AND);
         QueryBuilder dateQuery = rangeQuery("publishTime").gte(dateFrom).lte(dateTo);
         QueryBuilder boolQueryBuilder = boolQuery()
                 .should(textQuery)
-                .must(titleQuery)
                 .must(authorsQuery)
                 .must(dateQuery)
                 .minimumShouldMatch(1);
         builder = builder.withQuery(boolQueryBuilder);
-        builder.withPageable(PageRequest.of(page, Constants.RESULTS_PER_PAGE));
+        builder.withPageable(PageRequest.of(page, RESULTS_NUM));
         return elasticsearchOperations.queryForPage(builder.build(), CovidMeta.class);
     }
 
 
     @Override
-    public List<Sentence> findSentence(String base64vector) {
+    public List<ResultWrapper> findSentence(String base64vector) {
         String decoded_url = VectorEncoder.urlBase64Decode(base64vector);
         double[] vector = VectorEncoder.convertBase64ToArray(decoded_url);
         String body = "{\n" +
@@ -92,7 +92,7 @@ public class CovidMetadataServiceImpl implements CovidMetadataService {
                 "\t\t}\n" +
                 "    }\n" +
                 "  }\n" +
-                "}";
+                "}" + "\n";
         String resBody = null;
 
         try {
@@ -105,15 +105,31 @@ public class CovidMetadataServiceImpl implements CovidMetadataService {
                 .create();
         JsonObject jsonObject = gson.fromJson(resBody, JsonObject.class);
         JsonArray hits = jsonObject.get("hits").getAsJsonObject().get("hits").getAsJsonArray();
-        List<Sentence> results = new ArrayList<>();
+        List<ResultWrapper> results = new ArrayList<>();
         for (int i = 0; i < hits.size(); i++) {
             JsonObject next = hits.get(i).getAsJsonObject();
             Sentence sentence = gson.fromJson(next.get("_source"), Sentence.class);
             float score = next.get("_score").getAsFloat();
             sentence.setScore(score);
-            results.add(sentence);
+            CovidMeta covidMeta = findByID(sentence.getId());
+            results.add(new ResultWrapper(covidMeta, sentence));
         }
         return results;
+    }
+
+    @Override
+    public CovidMeta findByID(String id) {
+        String resBody = null;
+        try {
+            Response response = restClient.performRequest("GET", "/covid_index/_doc/" + id, Collections.emptyMap(), new NStringEntity("", ContentType.APPLICATION_JSON));
+            resBody = EntityUtils.toString(response.getEntity());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Gson gson = new GsonBuilder().setPrettyPrinting()
+                .create();
+        JsonObject jsonObject = gson.fromJson(resBody, JsonObject.class);
+        return gson.fromJson(jsonObject.get("_source"), CovidMeta.class);
     }
 
 }
