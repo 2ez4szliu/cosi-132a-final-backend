@@ -38,7 +38,7 @@ public class CovidMetadataServiceImpl implements CovidMetadataService {
 
     private static final int RESULTS_NUM = Constants.RESULTS_PER_PAGE;
     private static final int SLOP = Constants.PHRASE_SLOP;
-    private static final float BOOST = 3;
+    private static final float BOOST = 2;
 
     @Autowired
     private ElasticsearchOperations elasticsearchOperations;

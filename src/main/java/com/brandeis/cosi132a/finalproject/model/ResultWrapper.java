@@ -24,4 +24,5 @@ public class ResultWrapper {
     public void setSentence(Sentence sentence) {
         this.sentence = sentence;
     }
+
 }

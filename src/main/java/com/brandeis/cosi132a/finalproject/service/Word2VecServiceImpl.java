@@ -8,8 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Arrays;
-
 @Service
 public class Word2VecServiceImpl implements Word2VecService {
 
@@ -19,7 +17,7 @@ public class Word2VecServiceImpl implements Word2VecService {
 
     @Override
     public double[] sentenceToVector(String sentence) {
-        ResponseEntity response = restTemplate.exchange("http://localhost:5000/results?query=" + sentence, HttpMethod.GET, null,  String.class);
+        ResponseEntity response = restTemplate.exchange("http://localhost:5000/results?query=" + sentence, HttpMethod.GET, null, String.class);
         Gson gson = new Gson();
         String content = response.getBody().toString();
         JsonObject jsonObject = gson.fromJson(content, JsonObject.class);
