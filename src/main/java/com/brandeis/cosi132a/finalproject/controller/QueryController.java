@@ -39,12 +39,15 @@ public class QueryController {
             @RequestParam(value = "dateSince", required = false) String dateSince,
             @RequestParam(value = "dateTo", required = false) String dateTo,
             @RequestParam(value = "page") int page) {
-        try {
-            dateSince = DateParser.parseDate(dateSince);
-            dateTo = DateParser.parseDate(dateTo);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            if(dateSince != null && dateSince.length() > 0)
+//                dateSince = DateParser.parseDate(dateSince);
+//            if(dateTo != null && dateTo.length() > 0)
+//                dateTo = DateParser.parseDate(dateTo);
+//        } catch (ParseException e) {
+//            e.printStackTrace();
+//        }
+
         return covidMetadataService.query(text, title, authors, dateSince, dateTo, page);
     }
 

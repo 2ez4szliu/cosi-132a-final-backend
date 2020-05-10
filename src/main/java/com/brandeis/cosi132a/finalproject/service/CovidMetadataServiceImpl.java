@@ -53,6 +53,8 @@ public class CovidMetadataServiceImpl implements CovidMetadataService {
                                  String dateFrom,
                                  String dateTo,
                                  int page) {
+        System.out.println(dateFrom + " " + dateTo);
+        System.out.println("Authors: " + authors);
         if (text == null && authors == null && title == null && dateFrom == null && dateTo == null)
             throw new IllegalArgumentException("At least one field must be non-empty.");
         NativeSearchQueryBuilder builder = new NativeSearchQueryBuilder();
@@ -64,8 +66,22 @@ public class CovidMetadataServiceImpl implements CovidMetadataService {
                 .should(matchQuery("textAbstract", text).fuzziness(Fuzziness.AUTO))
                 .should(matchQuery("bodyText", text).fuzziness(Fuzziness.AUTO))
                 .minimumShouldMatch(1);
-        QueryBuilder authorsQuery = authors == null ? matchAllQuery() : matchQuery("authors", authors).fuzziness(Fuzziness.AUTO).operator(Operator.AND);
-        QueryBuilder dateQuery = rangeQuery("publishTime").gte(dateFrom).lte(dateTo);
+        QueryBuilder authorsQuery = (authors == null || authors.size() == 0) ? matchAllQuery() : matchQuery("authors", authors).fuzziness(Fuzziness.AUTO).operator(Operator.AND);
+        System.out.println(dateFrom +  "  " + dateTo);
+        QueryBuilder dateQuery;;
+        if(dateFrom != null && dateFrom.length() > 0) {
+            if(dateTo != null && dateTo.length() > 0) {
+                dateQuery = rangeQuery("publishTime").gte(dateFrom).lte(dateTo);
+            } else {
+                dateQuery = rangeQuery("publishTime").gte(dateFrom);
+            }
+        } else {
+            if(dateTo != null && dateTo.length() > 0) {
+                dateQuery = rangeQuery("publishTime").lte(dateTo);
+            } else {
+                dateQuery = matchAllQuery();
+            }
+        }
         QueryBuilder boolQueryBuilder = boolQuery()
                 .should(textQuery)
                 .must(authorsQuery)
