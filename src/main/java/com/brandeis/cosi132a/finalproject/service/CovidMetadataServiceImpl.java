@@ -67,16 +67,16 @@ public class CovidMetadataServiceImpl implements CovidMetadataService {
                 .should(matchQuery("bodyText", text).fuzziness(Fuzziness.AUTO))
                 .minimumShouldMatch(1);
         QueryBuilder authorsQuery = (authors == null || authors.size() == 0) ? matchAllQuery() : matchQuery("authors", authors).fuzziness(Fuzziness.AUTO).operator(Operator.AND);
-        System.out.println(dateFrom +  "  " + dateTo);
-        QueryBuilder dateQuery;;
-        if(dateFrom != null && dateFrom.length() > 0) {
-            if(dateTo != null && dateTo.length() > 0) {
+        System.out.println(dateFrom + "  " + dateTo);
+        QueryBuilder dateQuery;
+        if (dateFrom != null && dateFrom.length() > 0) {
+            if (dateTo != null && dateTo.length() > 0) {
                 dateQuery = rangeQuery("publishTime").gte(dateFrom).lte(dateTo);
             } else {
                 dateQuery = rangeQuery("publishTime").gte(dateFrom);
             }
         } else {
-            if(dateTo != null && dateTo.length() > 0) {
+            if (dateTo != null && dateTo.length() > 0) {
                 dateQuery = rangeQuery("publishTime").lte(dateTo);
             } else {
                 dateQuery = matchAllQuery();

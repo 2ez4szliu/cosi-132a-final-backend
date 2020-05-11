@@ -25,4 +25,14 @@ public class Word2VecServiceImpl implements Word2VecService {
         return arr;
     }
 
+    @Override
+    public String plotTrendImage(String query) {
+        ResponseEntity response = restTemplate.exchange("http://localhost:5000/trend?query=" + query, HttpMethod.GET, null, String.class);
+        Gson gson = new Gson();
+        String content = response.getBody().toString();
+        JsonObject jsonObject = gson.fromJson(content, JsonObject.class);
+        String url = gson.fromJson(jsonObject.get("url"), String.class);
+        return url;
+    }
+
 }

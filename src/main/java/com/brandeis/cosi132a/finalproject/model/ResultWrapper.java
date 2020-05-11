@@ -3,6 +3,7 @@ package com.brandeis.cosi132a.finalproject.model;
 public class ResultWrapper {
     private CovidMeta covidMeta;
     private Sentence sentence;
+    private String imgUrl;
 
     public ResultWrapper(CovidMeta covidMeta, Sentence sentence) {
         this.covidMeta = covidMeta;
@@ -25,4 +26,11 @@ public class ResultWrapper {
         this.sentence = sentence;
     }
 
+    public String getImgUrl() {
+        return imgUrl;
+    }
+
+    public void setImgUrl(String imgUrl) {
+        this.imgUrl = imgUrl;
+    }
 }
