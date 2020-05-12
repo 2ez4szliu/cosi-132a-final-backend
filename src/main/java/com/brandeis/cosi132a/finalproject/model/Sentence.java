@@ -5,6 +5,9 @@ import org.springframework.data.elasticsearch.annotations.Document;
 
 import java.util.Map;
 
+/**
+ * This class represent a sentence(paragraph/sentence) in the text embedding index
+ */
 @Document(indexName = "sentence_embedding_index", type = "_doc")
 public class Sentence implements Scoreable {
 

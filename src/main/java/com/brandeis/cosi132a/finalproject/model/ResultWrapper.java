@@ -1,5 +1,8 @@
 package com.brandeis.cosi132a.finalproject.model;
 
+/**
+ * This is a wrapper class for a sentence and the document(covidmeta) containing tat sentence
+ */
 public class ResultWrapper {
     private CovidMeta covidMeta;
     private Sentence sentence;

@@ -29,6 +29,16 @@ public class QueryController {
         return "Hello world";
     }
 
+    /**
+     *  Execute full-text search query and return a page of search result
+     * @param text text of the input
+     * @param title title of the input
+     * @param authors authors of the input
+     * @param dateSince search for documents after 'dateSince'
+     * @param dateTo search for documents before 'dateTo'
+     * @param page page number
+     * @return
+     */
     @RequestMapping(path = "/query", method = RequestMethod.GET)
     public Page<CovidMeta> query(
             @RequestParam(value = "text", required = false) String text,
@@ -40,6 +50,12 @@ public class QueryController {
         return covidMetadataService.query(text, title, authors, dateSince, dateTo, page);
     }
 
+    /**
+     *  Execute text embedding vector search, return a list of
+     *  results wrapper(the text and the document containing the text)
+     * @param query the search query
+     * @return list of resultWrapper(the text and the document containing the text)
+     */
     @RequestMapping(path = "/vector", method = RequestMethod.GET)
     public List<ResultWrapper> searchByVector(@RequestParam(value = "query") String query) {
         double[] vector = word2VecService.sentenceToVector(query);

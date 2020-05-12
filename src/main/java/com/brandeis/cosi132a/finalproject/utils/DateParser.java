@@ -6,6 +6,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class DateParser {
+    /**
+     * Parse an input date into yyyy-MM-dd format
+     * @param date input date string
+     * @return a date string, format is yyyy-MM-dd
+     * @throws ParseException
+     */
     public static String parseDate(String date) throws ParseException {
         if (date != null && date.length() > 0) {
             DateFormat origFormat = new SimpleDateFormat("MMM-dd-yyyy-");

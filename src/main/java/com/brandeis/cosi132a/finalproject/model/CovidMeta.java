@@ -7,6 +7,9 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * This class represents a document from the metadata.csv file
+ */
 @Document(indexName = "covid_index", type = "_doc")
 public class CovidMeta implements Scoreable{
 //covid_index & covid_embedding_index
